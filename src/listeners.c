@@ -323,7 +323,11 @@ void listeners__stop(void)
 #endif
 #ifdef WITH_UNIX_SOCKETS
 		if(db.config->listeners[i].unix_socket_path != NULL){
+#ifdef WIN32
+			DeleteFile(db.config->listeners[i].unix_socket_path);
+#else
 			unlink(db.config->listeners[i].unix_socket_path);
+#endif
 		}
 #endif
 #ifdef WITH_HTTP_API
