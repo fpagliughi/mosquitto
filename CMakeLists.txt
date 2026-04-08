@@ -76,10 +76,24 @@ endif()
 option(WITH_UNIX_SOCKETS "Include Unix Domain Socket support?" ON)
 if(WITH_UNIX_SOCKETS)
 	if(WIN32)
-		check_include_files("winsock2.h;afunix.h" HAVE_AFUNIX_H)
-		if(NOT HAVE_AFUNIX_H)
-			message(WARNING "afunix.h not found - disabling Unix Domain Socket support")
-			set(WITH_UNIX_SOCKETS OFF)
+		set(CMAKE_REQUIRED_LIBRARIES ws2_32)
+		set(CMAKE_REQUIRED_DEFINITIONS "-DWIN32_LEAN_AND_MEAN")
+		check_source_compiles(C [[
+			#include <winsock2.h>
+			#include <afunix.h>
+			int main() {
+				struct sockaddr_un addr;
+				addr.sun_family = AF_UNIX;
+				(void)addr;
+				return 0;
+			}
+		]] HAVE_AF_UNIX)
+		unset(CMAKE_REQUIRED_LIBRARIES)
+		unset(CMAKE_REQUIRED_DEFINITIONS)
+
+		if(NOT HAVE_AF_UNIX)
+			message(FATAL_ERROR "WITH_UNIX_SOCKETS requires Windows OS support. "
+				"Please use Windows 10 SDK version 1803 (10.0.17134.0) or later.")
 		endif()
 	endif()
 	if(WITH_UNIX_SOCKETS)
